@@ -1,22 +1,36 @@
 package zookepeer;
 
-import javafx.scene.text.Text;
-
 import java.io.*;
 import java.net.*;
 
 public class Servidor {
+    String ip;
+    int port;
+    String ipLider;
+    int portLider;
 
+    public Servidor(String ip, int port, String ipLider, int portLider) {
+        this.ip = ip;//TODO add ip to the logic
+        this.port = port;
+        this.ipLider = ipLider;
+        this.portLider = portLider;
 
-    public Servidor() {
+        initSocket();
+
+        if(port == portLider){
+            //initDataTable();
+        }
+    }
+
+    public void initSocket(){
         try {
-            ServerSocket serverSocket = new ServerSocket(10097);
+            ServerSocket serverSocket = new ServerSocket(port);
             new Thread(() -> {
                 while (true) {
 
                     try {
 
-                        System.out.println("esperando conexao na porta 10097");
+                        System.out.println("esperando conexao na porta " + port);
                         Socket no = serverSocket.accept(); //block
                         System.out.println("conexao ok");
 

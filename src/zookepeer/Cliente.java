@@ -74,13 +74,16 @@ public class Cliente {
 
 
     public static void main(String args[]) {
-        new Servidor();
 
         (new Thread(() -> {
             Scanner entrada = new Scanner(System.in);
             Cliente cliente = null;
 
             String opcao = "";
+
+            //if(){
+            //TODO colocar condicao se ja existem os servidores
+            menuServer(entrada);
 
             while (!opcao.equals("QUIT")) {//se usuario digitar quit sai do menu
                 System.out.println("Selecione uma das opções abaixo:");
@@ -133,5 +136,23 @@ public class Cliente {
             }
             entrada.close();
         })).start();
+    }
+
+    public static void menuServer(Scanner entrada) {
+        for (int i = 1; i < 4; i++) {
+            System.out.println("Digite o ip do servidor " + i + " a ser inicializado");
+            String ip = entrada.nextLine();
+
+            System.out.println("Digite a porta do servidor " + i + " a ser inicializado");
+            int port = Integer.parseInt(entrada.nextLine());
+
+            System.out.println("Digite o ip do servidor líder");
+            String ipLider = entrada.nextLine();
+
+            System.out.println("Digite a porta do servidor líder");
+            int portLider = Integer.parseInt(entrada.nextLine());
+
+            new Servidor(ip, port, ipLider, portLider);
+        }
     }
 }

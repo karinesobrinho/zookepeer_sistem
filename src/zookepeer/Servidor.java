@@ -10,7 +10,7 @@ public class Servidor {
     int portLider;
 
     public Servidor(String ip, int port, String ipLider, int portLider) {
-        this.ip = ip;//TODO add ip to the logic
+        this.ip = ip; //TODO add ip to the logic
         this.port = port;
         this.ipLider = ipLider;
         this.portLider = portLider;
@@ -18,7 +18,7 @@ public class Servidor {
         initSocket();
 
         if(port == portLider){
-            //initDataTable();
+            initDataTable();
         }
     }
 
@@ -54,5 +54,9 @@ public class Servidor {
         } catch (Exception e) {
 
         }
+    }
+
+    public void initDataTable(){
+
     }
 }

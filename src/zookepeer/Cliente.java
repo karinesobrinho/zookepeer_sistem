@@ -15,6 +15,11 @@ public class Cliente {
     String ip3;
     int port3;
 
+    OutputStream os;
+    DataOutputStream writer;
+    InputStreamReader is;
+    BufferedReader reader;
+
     public Cliente(
             //String ip1, int port1, String ip2, int port2, String ip3, int port3
     ) throws IOException {
@@ -28,48 +33,21 @@ public class Cliente {
         try {
             socket = new Socket("127.0.0.1", 10097);
 
-            OutputStream os = socket.getOutputStream();
-            DataOutputStream writer = new DataOutputStream(os);
+            this.os = socket.getOutputStream();
+            this.writer = new DataOutputStream(os);
 
-            InputStreamReader is = new InputStreamReader(socket.getInputStream());
-            BufferedReader reader = new BufferedReader(is);
-
-            BufferedReader inFromUser = new BufferedReader(new InputStreamReader(System.in));
-
-            String texto = inFromUser.readLine(); //block
-
-            writer.writeBytes(texto + '\n');
-
-            String response = reader.readLine(); //block
-            System.out.println("do servidor " + response);
-                /*socket = new Socket("127.0.0.1", 10097);
-
-                // Socket serverSocket = new Socket("127.0.0.1", 10098);
-                // Socket serverSocket = new Socket("127.0.0.1", 10099);
-
-                OutputStream outputStream = socket.getOutputStream();
-                DataOutputStream writer = new DataOutputStream(outputStream);
-
-
-                InputStreamReader is = new InputStreamReader(socket.getInputStream());
-                BufferedReader bufferedReader = new BufferedReader(is);
-
-                String reader = bufferedReader.readLine(); //bloqueante esperando
-
-                System.out.println("esperando msg");
-                BufferedReader inFromUser = new BufferedReader(new InputStreamReader(System.in));
-                String text = inFromUser.readLine();
-
-                writer.writeBytes(text + "\n");
-
-                String response = reader.readLine();
-                System.out.println("msg do servidor: " + response);
-
-                //s.close();*/
+            this.is = new InputStreamReader(socket.getInputStream());
+            this.reader = new BufferedReader(is);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        //}).start();
+    }
+
+    public void put(String key, String value) throws IOException {
+        writer.writeBytes(key + value + '\n');
+
+        String response = reader.readLine(); //block
+        System.out.println("do servidor " + response);
     }
 
 
@@ -111,6 +89,12 @@ public class Cliente {
 
                             System.out.println("Digite o value");
                             String value = entrada.nextLine();
+
+                            try {
+                                cliente.put(key, value);
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
                         } else {
                             System.out.println("Nenhum cliente inicializado no console.");
                         }

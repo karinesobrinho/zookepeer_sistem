@@ -2,6 +2,9 @@ package zookepeer;
 
 import java.io.*;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner;
 //import zookepeer.Servidor;
 
@@ -15,23 +18,29 @@ public class Cliente {
     String ip3;
     int port3;
 
+    Map<String, Integer> servers;
+
     OutputStream os;
     DataOutputStream writer;
     InputStreamReader is;
     BufferedReader reader;
+    Map<String,String> clientDataTable;
 
     public Cliente(
             //String ip1, int port1, String ip2, int port2, String ip3, int port3
     ) throws IOException {
         // this.ip1 = ip1; TODO
+        clientDataTable = new HashMap<String,String>();
         process();
     }
 
     public void process() {
         //new Thread(() -> {
+
         Socket socket = null;
         try {
             socket = new Socket("127.0.0.1", 10097);
+            System.out.println("Cliente criado");
 
             this.os = socket.getOutputStream();
             this.writer = new DataOutputStream(os);
@@ -44,7 +53,17 @@ public class Cliente {
     }
 
     public void put(String key, String value) throws IOException {
-        writer.writeBytes(key + value + '\n');
+        writer.writeBytes("PUT " + key + " " + value + '\n');
+
+        String response = reader.readLine(); //block
+        System.out.println("do servidor " + response);
+
+        //receber put ok
+        clientDataTable.put(key, value);
+    }
+
+    public void get(String key) throws IOException {
+        writer.writeBytes("GET " + key + '\n');
 
         String response = reader.readLine(); //block
         System.out.println("do servidor " + response);
@@ -104,7 +123,13 @@ public class Cliente {
                         //Envio da requisição GET, capturando do teclado as informações necessárias.
                         if (cliente != null) {
                             System.out.println("Digite a key a ser procurada");
-                            String keyToSearch = entrada.nextLine();
+                            String key = entrada.nextLine();
+
+                            try {
+                                cliente.get(key);
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
                         } else {
                             System.out.println("Nenhum cliente inicializado no console.");
                         }

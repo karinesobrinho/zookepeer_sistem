@@ -30,8 +30,11 @@ public class Servidor {
         initSocket();
 
         if (port == portLider) {
+            System.out.println("é lider");
             this.lider = true;
             initDataTable();
+        } else {
+            System.out.println(port + " port lider " + portLider);
         }
     }
 
@@ -56,12 +59,12 @@ public class Servidor {
                         text = text.toUpperCase();
                         String[] textSplited = text.split(" ");
 
-                        if (textSplited[0].equals("GET")) {
-                            System.out.println("get encontrado");
+                        if (textSplited[0].equals("PUT")) {
+                            System.out.println("put encontrado");
                             putRecived(textSplited[1], textSplited[2]);
 
-                        } else if (textSplited[0].equals("PUT")) {
-                            System.out.println("put encontrado");
+                        } else if (textSplited[0].equals("GET")) {
+                            System.out.println("get encontrado");
                             getRecived(textSplited[1]);
                         }
 
@@ -75,7 +78,7 @@ public class Servidor {
                 }
             }).start();
         } catch (Exception e) {
-
+            throw new RuntimeException(e);
         }
     }
 
@@ -83,7 +86,7 @@ public class Servidor {
         //se é o líder trata requisicao
         if (this.lider) {
             dataTable.put(key, value);
-            writer.writeBytes("PUT_OK" + '\n');
+            writer.writeBytes("PUT_OK " + '\n');
             //TODO put timestamp
             return;
         }

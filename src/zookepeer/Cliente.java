@@ -2,44 +2,29 @@ package zookepeer;
 
 import java.io.*;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Scanner;
+import java.util.*;
 //import zookepeer.Servidor;
 
 public class Cliente {
-    String ip1;
-    int port1;
-
-    String ip2;
-    int port2;
-
-    String ip3;
-    int port3;
-
-    Map<String, Integer> servers;
-
     OutputStream os;
     DataOutputStream writer;
     InputStreamReader is;
     BufferedReader reader;
-    Map<String,String> clientDataTable;
+    Map<String, String> clientDataTable;
+    Map<Integer, ArrayList<String>> servers;
 
-    public Cliente(
-            //String ip1, int port1, String ip2, int port2, String ip3, int port3
-    ) throws IOException {
-        // this.ip1 = ip1; TODO
-        clientDataTable = new HashMap<String,String>();
-        process();
+    public Cliente(Map<Integer, ArrayList<String>> servers) throws IOException {
+        this.servers = servers;
+        clientDataTable = new HashMap<String, String>();
     }
 
-    public void process() {
+    public void process(String host, int port) {
         //new Thread(() -> {
 
+        System.out.println("host: " + host + " port " + port);
         Socket socket = null;
         try {
-            socket = new Socket("127.0.0.1", 10097);
+            socket = new Socket("127.0.0.1", port);
             System.out.println("Cliente criado");
 
             this.os = socket.getOutputStream();
@@ -53,6 +38,9 @@ public class Cliente {
     }
 
     public void put(String key, String value) throws IOException {
+        ArrayList<String> host = servers.get(1);
+        process(host.get(0), Integer.parseInt(host.get(1)));
+
         writer.writeBytes("PUT " + key + " " + value + '\n');
 
         String response = reader.readLine(); //block
@@ -80,7 +68,7 @@ public class Cliente {
 
             //if(){
             //TODO colocar condicao se ja existem os servidores
-            menuServer(entrada);
+            Map<Integer, ArrayList<String>> servers = menuServer(entrada);
 
             while (!opcao.equals("QUIT")) {//se usuario digitar quit sai do menu
                 System.out.println("Selecione uma das opções abaixo:");
@@ -94,7 +82,7 @@ public class Cliente {
                     case "INIT": {
                         //No caso do INIT, realize a inicialização do cliente
                         try {
-                            cliente = new Cliente();
+                            cliente = new Cliente(servers);
                         } catch (IOException e) {
                             throw new RuntimeException(e);
                         }
@@ -147,7 +135,9 @@ public class Cliente {
         })).start();
     }
 
-    public static void menuServer(Scanner entrada) {
+    public static Map<Integer, ArrayList<String>> menuServer(Scanner entrada) {
+        Map<Integer, ArrayList<String>> servers = new HashMap<Integer, ArrayList<String>>();
+
         for (int i = 1; i < 4; i++) {
             System.out.println("Digite o ip do servidor " + i + " a ser inicializado");
             String ip = entrada.nextLine();
@@ -161,7 +151,14 @@ public class Cliente {
             System.out.println("Digite a porta do servidor líder");
             int portLider = Integer.parseInt(entrada.nextLine());
 
+            ArrayList<String> list = new ArrayList<>();
+            list.add(ip);
+            list.add(String.valueOf(port));
+            servers.put(i, list);
+
             new Servidor(ip, port, ipLider, portLider);
         }
+        System.out.println(servers);
+        return servers;
     }
 }

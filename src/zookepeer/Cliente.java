@@ -46,11 +46,14 @@ public class Cliente {
         String response = reader.readLine(); //block
         System.out.println("do servidor " + response);
 
-        //receber put ok
+        //if(response.equals("PUT_OK"))
         clientDataTable.put(key, value);
     }
 
     public void get(String key) throws IOException {
+        ArrayList<String> host = servers.get(1);
+        process(host.get(0), Integer.parseInt(host.get(1)));
+
         writer.writeBytes("GET " + key + '\n');
 
         String response = reader.readLine(); //block
@@ -136,7 +139,7 @@ public class Cliente {
     }
 
     public static Map<Integer, ArrayList<String>> menuServer(Scanner entrada) {
-        Map<Integer, ArrayList<String>> servers = new HashMap<Integer, ArrayList<String>>();
+        Map<Integer, ArrayList<String>> servers = new HashMap<>();
 
         for (int i = 1; i < 4; i++) {
             System.out.println("Digite o ip do servidor " + i + " a ser inicializado");

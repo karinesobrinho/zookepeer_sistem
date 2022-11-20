@@ -2,6 +2,7 @@ package zookepeer;
 
 import java.io.*;
 import java.net.*;
+import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -12,6 +13,7 @@ public class Servidor {
     int portLider;
     boolean lider;
     Map<String, String> dataTable;
+    Map<String, Timestamp> timestamps;
 
     InputStreamReader is;
     BufferedReader bufferedReader;
@@ -28,11 +30,11 @@ public class Servidor {
         this.lider = false;
 
         initSocket();
+        initDataTable();
 
         if (port == portLider) {
             System.out.println("é lider");
             this.lider = true;
-            initDataTable();
         } else {
             System.out.println(port + " port lider " + portLider);
         }
@@ -43,7 +45,6 @@ public class Servidor {
             ServerSocket serverSocket = new ServerSocket(port);
             new Thread(() -> {
                 while (true) {
-
                     try {
                         System.out.println("esperando conexao na porta " + port);
                         Socket no = serverSocket.accept(); //block
@@ -66,6 +67,10 @@ public class Servidor {
                         } else if (textSplited[0].equals("GET")) {
                             System.out.println("get encontrado");
                             getRecived(textSplited[1]);
+
+                        } else if (textSplited[0].equals("REPLICATION")) {
+                            System.out.println("Replication encontrado");
+                            //replicationRecived(textSplited[1], textSplited[2]);
                         }
 
                         //writer.writeBytes(text + '\n');
@@ -74,7 +79,6 @@ public class Servidor {
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
-
                 }
             }).start();
         } catch (Exception e) {
@@ -85,9 +89,23 @@ public class Servidor {
     public void putRecived(String key, String value) throws IOException {
         //se é o líder trata requisicao
         if (this.lider) {
-            dataTable.put(key, value);
-            writer.writeBytes("PUT_OK " + '\n');
-            //TODO put timestamp
+            Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+
+            if (dataTable.containsKey(key)) {
+                //se já contem chava atualiza valores e timestamp
+
+                dataTable.remove(key);
+                timestamps.remove(key);
+
+                dataTable.put(key, value);
+                timestamps.put(key, timestamp);
+
+                writer.writeBytes("PUT_OK " + timestamp + '\n');
+            } else {
+                dataTable.put(key, value);
+            }
+
+            replication();
             return;
         }
 
@@ -107,7 +125,13 @@ public class Servidor {
         //se nao envia requisicao para o líder
     }
 
+    public void replication() {
+
+        //TODO replicar informacao para outros servidores
+    }
+
     public void initDataTable() {
-        dataTable = new HashMap<String, String>();
+        dataTable = new HashMap<>();
+        timestamps = new HashMap<>();
     }
 }

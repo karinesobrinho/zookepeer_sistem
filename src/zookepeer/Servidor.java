@@ -110,7 +110,9 @@ public class Servidor {
 
         if (type.equals("PUT")) {
             System.out.println("put encontrado");
+
             putRecived(msg.getKey(), msg.getValue());
+
 
         } else if (type.equals("GET")) {
             System.out.println("get encontrado");
@@ -124,28 +126,43 @@ public class Servidor {
 
     public void putRecived(String key, String value) throws IOException {
         //se é o líder trata requisicao
-        if (this.lider) {
-            Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+        System.out.println("putRecived");
+        new Thread(() -> {
+            System.out.println("Thread");
+            if (this.lider) {
+                Timestamp timestamp = new Timestamp(System.currentTimeMillis());
 
-            if (dataTable.containsKey(key)) {
-                //se já contem chava atualiza valores e timestamp
+                if (dataTable.containsKey(key)) {
+                    //se já contem chava atualiza valores e timestamp
 
-                dataTable.remove(key);
-                timestamps.remove(key);
+                    dataTable.remove(key);
+                    timestamps.remove(key);
 
-                dataTable.put(key, value);
-                timestamps.put(key, timestamp);
+                    dataTable.put(key, value);
+                    timestamps.put(key, timestamp);
+                    System.out.println("dentro do serv PUT_OK " + timestamp);
 
-                writer.writeBytes("PUT_OK " + timestamp + '\n');
-            } else {
-                dataTable.put(key, value);
+                    try {
+                        writer.writeBytes("PUT_OK " + timestamp + '\n');
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                } else {
+                    dataTable.put(key, value);
+
+                    try {
+                        writer.writeBytes("PUT_OK " + timestamp + '\n');
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+
+                replication();
+                return;
             }
 
-            replication();
-            return;
-        }
-
-        //se nao envia requisicao para o líder
+            //se nao envia requisicao para o líder
+        }).start();
 
     }
 

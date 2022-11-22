@@ -59,9 +59,8 @@ public class Servidor {
                         os = no.getOutputStream();
                         writer = new DataOutputStream(os);
 
-                        System.out.println("buffer ok");
                         String text = bufferedReader.readLine();
-                        System.out.println(text);
+                        System.out.println("Recebido no servidor " + text);
 
                         Gson gson = new Gson(); // conversor
                         Mensagem msg = gson.fromJson(text, Mensagem.class);
@@ -90,8 +89,29 @@ public class Servidor {
 
         } else if (type.equals("REPLICATION")) {
             System.out.println("Replication encontrado");
-            //replicationRecived(textSplited[1], textSplited[2]);
+            replicationRecived(msg.getKey(), msg.getValue(), msg.getTimestamp());
         }
+    }
+
+    private void replicationRecived(String key, String value, String timestamp) throws IOException {
+        dataTable.put(key, value);
+        timestamps.put(key, Timestamp.valueOf(timestamp));
+
+        Mensagem msg = new Mensagem();
+
+        msg.setType("REPLICATION_OK");
+        msg.setKey(key);
+        msg.setValue(value);
+        msg.setTimestamp(timestamp);
+
+        // --- transformando em JSON --- //
+        Gson gson = new Gson(); // conversor
+        String json = gson.toJson(msg);
+
+        // exibindo o JSON //
+        System.out.println(json);
+
+        writer.writeBytes(json + "\n");
     }
 
     public void putRecived(String key, String value, String text) throws IOException {
@@ -147,15 +167,37 @@ public class Servidor {
             //TODO call lider to do put
 
             //se nao envia requisicao para o líder
-        }).start();
+            try {
+                Socket nsocket = new Socket("127.0.0.1", portLider);
 
+                OutputStream outputStream = nsocket.getOutputStream();
+                writer = new DataOutputStream(outputStream);
+                writer.writeBytes(text + "\n");
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }).start();
     }
 
-    public void getRecived(String key, String text) {
+    public void getRecived(String key, String text) throws IOException {
         //se é o líder trata requisicao
         if (this.lider) {
             if (dataTable.containsKey(key)) {
-                System.out.println("achei a chave");
+                Mensagem msg = new Mensagem();
+
+                msg.setType("GET_OK");
+                msg.setKey(key);
+                msg.setValue(dataTable.get(key));
+                msg.setTimestamp(String.valueOf(timestamps.get(key)));
+
+                // --- transformando em JSON --- //
+                Gson gson = new Gson(); // conversor
+                String json = gson.toJson(msg);
+
+                // exibindo o JSON //
+                System.out.println(json);
+
+                writer.writeBytes(json + "\n");
             }
             return;
         }
@@ -173,7 +215,6 @@ public class Servidor {
     }
 
     public void replication(String key, String value, Timestamp timestamp, int port) {
-        //TODO replicar informacao para outros servidores
         if (this.port == port) return;
 
         try {

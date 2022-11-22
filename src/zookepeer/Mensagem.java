@@ -5,6 +5,7 @@ public class Mensagem {
     String key;
     String value;
     String timestamp;
+    String clientAddress;
 
     public String getType() {
         return type;
@@ -22,6 +23,8 @@ public class Mensagem {
         return timestamp;
     }
 
+    public String getClientAddress() {return clientAddress;}
+
     public void setType(String type) {
         this.type = type;
     }
@@ -37,4 +40,6 @@ public class Mensagem {
     public void setTimestamp(String timestamp) {
         this.timestamp = timestamp;
     }
+
+    public void setClientAddress(String clientAddress) {this.clientAddress = clientAddress;}
 }

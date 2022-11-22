@@ -2,6 +2,7 @@ package zookepeer;
 
 import java.io.*;
 import java.net.Socket;
+import java.sql.Timestamp;
 import java.util.*;
 //import zookepeer.Servidor;
 import com.google.gson.Gson;
@@ -12,11 +13,13 @@ public class Cliente {
     InputStreamReader is;
     BufferedReader reader;
     Map<String, String> clientDataTable;
+    Map<String, Timestamp> timestamps;
     Map<Integer, ArrayList<String>> servers;
 
     public Cliente(Map<Integer, ArrayList<String>> servers) throws IOException {
         this.servers = servers;
-        clientDataTable = new HashMap<String, String>();
+        clientDataTable = new HashMap<>();
+        timestamps = new HashMap<>();
     }
 
     public void process(String host, int port) {
@@ -42,7 +45,6 @@ public class Cliente {
         ArrayList<String> host = servers.get(1);
         process(host.get(0), Integer.parseInt(host.get(1)));
 
-        // --- criar objeto cliente --- //
         Mensagem msg = new Mensagem();
 
         msg.setType("PUT");
@@ -57,23 +59,38 @@ public class Cliente {
         System.out.println( json );
         
         writer.writeBytes(json + "\n");
-        System.out.println( "depois" );
 
         String response = reader.readLine(); //block
         System.out.println("do servidor " + response);
 
-        //if(response.equals("PUT_OK"))
+        Gson gsonres = new Gson(); // conversor
+        Mensagem res = gsonres.fromJson(response, Mensagem.class);
+
         clientDataTable.put(key, value);
+        timestamps.put(key, Timestamp.valueOf(res.getTimestamp()));
     }
 
     public void get(String key) throws IOException {
         ArrayList<String> host = servers.get(1);
         process(host.get(0), Integer.parseInt(host.get(1)));
 
-        writer.writeBytes("GET " + key + '\n');
+        Mensagem msg = new Mensagem();
+
+        msg.setType("GET");
+        msg.setKey(key);
+        msg.setTimestamp(String.valueOf(timestamps.get(key)));
+
+        // --- transformando em JSON --- //
+        Gson gson = new Gson(); // conversor
+        String json = gson.toJson( msg );
+
+        // exibindo o JSON //
+        System.out.println( json );
+
+        writer.writeBytes(json + "\n");
 
         String response = reader.readLine(); //block
-        System.out.println("do servidor " + response);
+        System.out.println("Do servidor " + response);
     }
 
 

@@ -66,33 +66,7 @@ public class Servidor {
                         Gson gson = new Gson(); // conversor
                         Mensagem msg = gson.fromJson(text, Mensagem.class);
 
-                        select(msg);
-
-                        /*com.google.gson.Gson gson = new Gson(); // conversor
-                        Mensagem recived = gson.fromJson(text, Mensagem.class);
-
-                        System.out.println("chamo select com isso" + recived);
-
-                        select(recived);
-
-                       text = text.toUpperCase();
-                        String[] textSplited = text.split(" ");
-
-                        if (textSplited[0].equals("PUT")) {
-                            System.out.println("put encontrado");
-                            putRecived(textSplited[1], textSplited[2]);
-
-                        } else if (textSplited[0].equals("GET")) {
-                            System.out.println("get encontrado");
-                            getRecived(textSplited[1]);
-
-                        } else if (textSplited[0].equals("REPLICATION")) {
-                            System.out.println("Replication encontrado");
-                            //replicationRecived(textSplited[1], textSplited[2]);
-                        }
-
-                        //writer.writeBytes(text + '\n');
-                        System.out.println(text);*/
+                        select(msg, text);
 
                     } catch (IOException e) {
                         throw new RuntimeException(e);
@@ -104,19 +78,15 @@ public class Servidor {
         }
     }
 
-    public void select(Mensagem msg) throws IOException {
+    public void select(Mensagem msg, String text) throws IOException {
         String type = msg.getType();
-        System.out.println("cheguei em select! type : " + type);
 
         if (type.equals("PUT")) {
             System.out.println("put encontrado");
-
-            putRecived(msg.getKey(), msg.getValue());
-
-
+            putRecived(msg.getKey(), msg.getValue(), text);
         } else if (type.equals("GET")) {
             System.out.println("get encontrado");
-            getRecived(msg.getKey());
+            getRecived(msg.getKey(), text);
 
         } else if (type.equals("REPLICATION")) {
             System.out.println("Replication encontrado");
@@ -124,14 +94,14 @@ public class Servidor {
         }
     }
 
-    public void putRecived(String key, String value) throws IOException {
+    public void putRecived(String key, String value, String text) throws IOException {
         //se é o líder trata requisicao
         System.out.println("putRecived");
+        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+
         new Thread(() -> {
             System.out.println("Thread");
             if (this.lider) {
-                Timestamp timestamp = new Timestamp(System.currentTimeMillis());
-
                 if (dataTable.containsKey(key)) {
                     //se já contem chava atualiza valores e timestamp
 
@@ -142,8 +112,20 @@ public class Servidor {
                     timestamps.put(key, timestamp);
                     System.out.println("dentro do serv PUT_OK " + timestamp);
 
+                    Mensagem msg = new Mensagem();
+
+                    msg.setType("PUT_OK");
+                    msg.setTimestamp(String.valueOf(timestamp));
+
+                    // --- transformando em JSON --- //
+                    Gson gson = new Gson(); // conversor
+                    String json = gson.toJson(msg);
+
+                    // exibindo o JSON //
+                    System.out.println(json);
+
                     try {
-                        writer.writeBytes("PUT_OK " + timestamp + '\n');
+                        writer.writeBytes(json + "\n");
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
@@ -157,16 +139,19 @@ public class Servidor {
                     }
                 }
 
-                replication();
+                replication(key, value, timestamp, 10098);
+                replication(key, value, timestamp, 10097);
+                replication(key, value, timestamp, 10099);
                 return;
             }
+            //TODO call lider to do put
 
             //se nao envia requisicao para o líder
         }).start();
 
     }
 
-    public void getRecived(String key) {
+    public void getRecived(String key, String text) {
         //se é o líder trata requisicao
         if (this.lider) {
             if (dataTable.containsKey(key)) {
@@ -176,10 +161,46 @@ public class Servidor {
         }
 
         //se nao envia requisicao para o líder
+        try {
+            Socket nsocket = new Socket("127.0.0.1", portLider);
+
+            OutputStream outputStream = nsocket.getOutputStream();
+            writer = new DataOutputStream(outputStream);
+            writer.writeBytes(text + "\n");
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    public void replication() {
+    public void replication(String key, String value, Timestamp timestamp, int port) {
         //TODO replicar informacao para outros servidores
+        if (this.port == port) return;
+
+        try {
+            Socket nsocket = new Socket("127.0.0.1", port);
+            System.out.println("lider conn criado");
+
+            OutputStream outputStream = nsocket.getOutputStream();
+            writer = new DataOutputStream(outputStream);
+
+            Mensagem msg = new Mensagem();
+
+            msg.setType("REPLICATION");
+            msg.setKey(key);
+            msg.setValue(value);
+            msg.setTimestamp(String.valueOf(timestamp));
+
+            // --- transformando em JSON --- //
+            Gson gson = new Gson(); // conversor
+            String json = gson.toJson(msg);
+
+            // exibindo o JSON //
+            System.out.println(json);
+
+            writer.writeBytes(json + "\n");
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public void initDataTable() {

@@ -6,12 +6,15 @@ import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.google.gson.Gson;
+
 public class Servidor {
     String ip;
     int port;
     String ipLider;
     int portLider;
     boolean lider;
+    ServerSocket serverSocket;
     Map<String, String> dataTable;
     Map<String, Timestamp> timestamps;
 
@@ -42,7 +45,7 @@ public class Servidor {
 
     public void initSocket() {
         try {
-            ServerSocket serverSocket = new ServerSocket(port);
+            serverSocket = new ServerSocket(port);
             new Thread(() -> {
                 while (true) {
                     try {
@@ -56,8 +59,23 @@ public class Servidor {
                         os = no.getOutputStream();
                         writer = new DataOutputStream(os);
 
+                        System.out.println("buffer ok");
                         String text = bufferedReader.readLine();
-                        text = text.toUpperCase();
+                        System.out.println(text);
+
+                        Gson gson = new Gson(); // conversor
+                        Mensagem msg = gson.fromJson(text, Mensagem.class);
+
+                        select(msg);
+
+                        /*com.google.gson.Gson gson = new Gson(); // conversor
+                        Mensagem recived = gson.fromJson(text, Mensagem.class);
+
+                        System.out.println("chamo select com isso" + recived);
+
+                        select(recived);
+
+                       text = text.toUpperCase();
                         String[] textSplited = text.split(" ");
 
                         if (textSplited[0].equals("PUT")) {
@@ -74,7 +92,7 @@ public class Servidor {
                         }
 
                         //writer.writeBytes(text + '\n');
-                        System.out.println(text);
+                        System.out.println(text);*/
 
                     } catch (IOException e) {
                         throw new RuntimeException(e);
@@ -83,6 +101,24 @@ public class Servidor {
             }).start();
         } catch (Exception e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public void select(Mensagem msg) throws IOException {
+        String type = msg.getType();
+        System.out.println("cheguei em select! type : " + type);
+
+        if (type.equals("PUT")) {
+            System.out.println("put encontrado");
+            putRecived(msg.getKey(), msg.getValue());
+
+        } else if (type.equals("GET")) {
+            System.out.println("get encontrado");
+            getRecived(msg.getKey());
+
+        } else if (type.equals("REPLICATION")) {
+            System.out.println("Replication encontrado");
+            //replicationRecived(textSplited[1], textSplited[2]);
         }
     }
 
@@ -126,7 +162,6 @@ public class Servidor {
     }
 
     public void replication() {
-
         //TODO replicar informacao para outros servidores
     }
 

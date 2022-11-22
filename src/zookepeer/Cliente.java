@@ -4,6 +4,7 @@ import java.io.*;
 import java.net.Socket;
 import java.util.*;
 //import zookepeer.Servidor;
+import com.google.gson.Gson;
 
 public class Cliente {
     OutputStream os;
@@ -41,7 +42,22 @@ public class Cliente {
         ArrayList<String> host = servers.get(1);
         process(host.get(0), Integer.parseInt(host.get(1)));
 
-        writer.writeBytes("PUT " + key + " " + value + '\n');
+        // --- criar objeto cliente --- //
+        Mensagem msg = new Mensagem();
+
+        msg.setType("PUT");
+        msg.setKey(key);
+        msg.setValue(value);
+
+        // --- transformando em JSON --- //
+        Gson gson = new Gson(); // conversor
+        String json = gson.toJson( msg );
+
+        // exibindo o JSON //
+        System.out.println( json );
+        
+        writer.writeBytes(json + "\n");
+        System.out.println( "depois" );
 
         String response = reader.readLine(); //block
         System.out.println("do servidor " + response);
@@ -66,6 +82,7 @@ public class Cliente {
         (new Thread(() -> {
             Scanner entrada = new Scanner(System.in);
             Cliente cliente = null;
+            //new Mensagem("type", "key", "value", "timestamp");
 
             String opcao = "";
 

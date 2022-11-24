@@ -4,7 +4,6 @@ import java.io.*;
 import java.net.Socket;
 import java.sql.Timestamp;
 import java.util.*;
-//import zookepeer.Servidor;
 import com.google.gson.Gson;
 
 public class Cliente {
@@ -14,23 +13,39 @@ public class Cliente {
     BufferedReader reader;
     Map<String, String> clientDataTable;
     Map<String, Timestamp> timestamps;
-    Map<Integer, ArrayList<String>> servers;
+    String ip1;
+    int port1;
+    String ip2;
+    int port2;
+    String ip3;
+    int port3;
 
-    public Cliente(Map<Integer, ArrayList<String>> servers) throws IOException {
-        this.servers = servers;
+    public Cliente(String ip1, int port1, String ip2, int port2, String ip3, int port3) throws IOException {
+        this.ip1 = ip1;
+        this.port1 = port1;
+
+        this.ip2 = ip2;
+        this.port2 = port2;
+
+        this.ip3 = ip3;
+        this.port3 = port3;
+
         clientDataTable = new HashMap<>();
         timestamps = new HashMap<>();
+
+        //adiciona tempo futuro para teste do get fail
+        clientDataTable.put("future", "hard_coded");
+        timestamps.put("future", Timestamp.valueOf("2023-11-22 20:57:45.985"));
     }
 
     public void process(String host, int port) {
         //new Thread(() -> {
 
-        System.out.println("host: " + host + " port " + port);
         Socket socket = null;
         try {
-            socket = new Socket("127.0.0.1", port);
-            System.out.println("Cliente criado");
+            socket = new Socket("127.0.0.1", port); //cria socket com porta do serv
 
+            //seta as variaveis de in/out put para comunicacao com o server
             this.os = socket.getOutputStream();
             this.writer = new DataOutputStream(os);
 
@@ -42,9 +57,9 @@ public class Cliente {
     }
 
     public void put(String key, String value) throws IOException {
-        ArrayList<String> host = servers.get(1);
-        process(host.get(0), Integer.parseInt(host.get(1)));
+        process(ip1, port1);// cria conexao com o servidor
 
+        //instancia mensagem com os parametros
         Mensagem msg = new Mensagem();
 
         msg.setType("PUT");
@@ -53,11 +68,11 @@ public class Cliente {
 
         // --- transformando em JSON --- //
         Gson gson = new Gson(); // conversor
-        String json = gson.toJson( msg );
+        String json = gson.toJson(msg);
 
         // exibindo o JSON //
-        System.out.println( json );
-        
+        System.out.println(json);
+
         writer.writeBytes(json + "\n");
 
         String response = reader.readLine(); //block
@@ -71,9 +86,9 @@ public class Cliente {
     }
 
     public void get(String key) throws IOException {
-        ArrayList<String> host = servers.get(1);
-        process(host.get(0), Integer.parseInt(host.get(1)));
+        process(ip1, port1);// cria conexao com o servidor
 
+        //instancia mensagem com os parametros
         Mensagem msg = new Mensagem();
 
         msg.setType("GET");
@@ -82,30 +97,25 @@ public class Cliente {
 
         // --- transformando em JSON --- //
         Gson gson = new Gson(); // conversor
-        String json = gson.toJson( msg );
+        String json = gson.toJson(msg);
 
         // exibindo o JSON //
-        System.out.println( json );
+        System.out.println(json);
 
-        writer.writeBytes(json + "\n");
+        writer.writeBytes(json + "\n"); //envia json para o servidor
 
-        String response = reader.readLine(); //block
+        String response = reader.readLine(); //block espera resposta do servidor
         System.out.println("Do servidor " + response);
     }
 
 
     public static void main(String args[]) {
 
-        (new Thread(() -> {
+        (new Thread(() -> {// com a Thread o menu fica sempre ativo
             Scanner entrada = new Scanner(System.in);
             Cliente cliente = null;
-            //new Mensagem("type", "key", "value", "timestamp");
 
             String opcao = "";
-
-            //if(){
-            //TODO colocar condicao se ja existem os servidores
-            Map<Integer, ArrayList<String>> servers = menuServer(entrada);
 
             while (!opcao.equals("QUIT")) {//se usuario digitar quit sai do menu
                 System.out.println("Selecione uma das opções abaixo:");
@@ -117,11 +127,26 @@ public class Cliente {
 
                 switch (opcao) {
                     case "INIT": {
-                        //No caso do INIT, realize a inicialização do cliente
-                        try {
-                            cliente = new Cliente(servers);
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
+                        //No caso do INIT, realize a inicialização do cliente/servidor
+                        System.out.println("Selecione um para inciar:");
+                        System.out.println("SERVIDOR");
+                        System.out.println("CLIENTE");
+
+                        String op = entrada.nextLine();
+
+                        switch (op) {
+                            case "SERVIDOR": {
+                                menuServer(entrada);
+                                break;
+                            }
+                            case "CLIENTE": {
+                                try {
+                                    cliente = menuClient(entrada);
+                                } catch (IOException e) {
+                                    throw new RuntimeException(e);
+                                }
+                                break;
+                            }
                         }
                         break;
                     }
@@ -172,30 +197,33 @@ public class Cliente {
         })).start();
     }
 
-    public static Map<Integer, ArrayList<String>> menuServer(Scanner entrada) {
-        Map<Integer, ArrayList<String>> servers = new HashMap<>();
-
+    public static Cliente menuClient(Scanner entrada) throws IOException {
+        //auxiliar no recebimento de parametros do cliente
+        ArrayList<String> serverInfo = new ArrayList<>();
         for (int i = 1; i < 4; i++) {
-            System.out.println("Digite o ip do servidor " + i + " a ser inicializado");
-            String ip = entrada.nextLine();
+            System.out.println("Digite o ip do servidor " + i);
+            serverInfo.add(entrada.nextLine());
 
-            System.out.println("Digite a porta do servidor " + i + " a ser inicializado");
-            int port = Integer.parseInt(entrada.nextLine());
-
-            System.out.println("Digite o ip do servidor líder");
-            String ipLider = entrada.nextLine();
-
-            System.out.println("Digite a porta do servidor líder");
-            int portLider = Integer.parseInt(entrada.nextLine());
-
-            ArrayList<String> list = new ArrayList<>();
-            list.add(ip);
-            list.add(String.valueOf(port));
-            servers.put(i, list);
-
-            new Servidor(ip, port, ipLider, portLider);
+            System.out.println("Digite a porta do servidor " + i);
+            serverInfo.add(entrada.nextLine());
         }
-        System.out.println(servers);
-        return servers;
+        return new Cliente(serverInfo.get(0), Integer.parseInt(serverInfo.get(1)), serverInfo.get(2), Integer.parseInt(serverInfo.get(3)), serverInfo.get(4), Integer.parseInt(serverInfo.get(5)));
+    }
+
+    public static void menuServer(Scanner entrada) {
+        //auxiliar no recebimento de parametros do servidor
+        System.out.println("Digite o ip do servidor a ser inicializado");
+        String ip = entrada.nextLine();
+
+        System.out.println("Digite a porta do servidor a ser inicializado");
+        int port = Integer.parseInt(entrada.nextLine());
+
+        System.out.println("Digite o ip do servidor líder");
+        String ipLider = entrada.nextLine();
+
+        System.out.println("Digite a porta do servidor líder");
+        int portLider = Integer.parseInt(entrada.nextLine());
+
+        new Servidor(ip, port, ipLider, portLider);
     }
 }

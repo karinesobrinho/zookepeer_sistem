@@ -26,7 +26,7 @@ public class Servidor {
 
 
     public Servidor(String ip, int port, String ipLider, int portLider) {
-        this.ip = ip; //TODO add ip to the logic
+        this.ip = ip;
         this.port = port;
         this.ipLider = ipLider;
         this.portLider = portLider;
@@ -36,17 +36,14 @@ public class Servidor {
         initDataTable();
 
         if (port == portLider) {
-            System.out.println("é lider");
             this.lider = true;
-        } else {
-            System.out.println(port + " port lider " + portLider);
         }
     }
 
     public void initSocket() {
         try {
             serverSocket = new ServerSocket(port);
-            new Thread(() -> {
+            new Thread(() -> { //Thread do servidor sempre ouvindo na porta
                 while (true) {
                     try {
                         System.out.println("esperando conexao na porta " + port);
@@ -59,6 +56,7 @@ public class Servidor {
                         os = no.getOutputStream();
                         writer = new DataOutputStream(os);
 
+                        //quando recebe converte de string para mensagem e manda para select
                         String text = bufferedReader.readLine();
                         System.out.println("Recebido no servidor " + text);
 
@@ -78,17 +76,14 @@ public class Servidor {
     }
 
     public void select(Mensagem msg, String text) throws IOException {
+        //faz triagem por tipo da mensagem
         String type = msg.getType();
 
-        if (type.equals("PUT")) {
-            System.out.println("put encontrado");
+        if(type.equals("PUT")) {
             putRecived(msg.getKey(), msg.getValue(), text);
         } else if (type.equals("GET")) {
-            System.out.println("get encontrado");
-            getRecived(msg.getKey(), text);
-
+            getRecived(msg.getKey(), Timestamp.valueOf(msg.getTimestamp()));
         } else if (type.equals("REPLICATION")) {
-            System.out.println("Replication encontrado");
             replicationRecived(msg.getKey(), msg.getValue(), msg.getTimestamp());
         }
     }
@@ -111,7 +106,7 @@ public class Servidor {
         // exibindo o JSON //
         System.out.println(json);
 
-        writer.writeBytes(json + "\n");
+        writer.writeBytes(json + "\n");//responde ao servidor que enviou a mensagem com replication_ok
     }
 
     public void putRecived(String key, String value, String text) throws IOException {
@@ -120,8 +115,19 @@ public class Servidor {
         Timestamp timestamp = new Timestamp(System.currentTimeMillis());
 
         new Thread(() -> {
-            System.out.println("Thread");
             if (this.lider) {
+                //se é o lider processa o put
+                Mensagem msg = new Mensagem();
+
+                msg.setType("PUT_OK");
+                msg.setKey(key);
+                msg.setValue(value);
+                msg.setTimestamp(String.valueOf(timestamp));
+
+                // --- transformando em JSON --- //
+                Gson gson = new Gson(); // conversor
+                String json = gson.toJson(msg);
+
                 if (dataTable.containsKey(key)) {
                     //se já contem chava atualiza valores e timestamp
 
@@ -130,16 +136,6 @@ public class Servidor {
 
                     dataTable.put(key, value);
                     timestamps.put(key, timestamp);
-                    System.out.println("dentro do serv PUT_OK " + timestamp);
-
-                    Mensagem msg = new Mensagem();
-
-                    msg.setType("PUT_OK");
-                    msg.setTimestamp(String.valueOf(timestamp));
-
-                    // --- transformando em JSON --- //
-                    Gson gson = new Gson(); // conversor
-                    String json = gson.toJson(msg);
 
                     // exibindo o JSON //
                     System.out.println(json);
@@ -151,75 +147,83 @@ public class Servidor {
                     }
                 } else {
                     dataTable.put(key, value);
-
+                    timestamps.put(key, timestamp);
                     try {
-                        writer.writeBytes("PUT_OK " + timestamp + '\n');
+                        writer.writeBytes(json + '\n');
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
                 }
 
+                //replica para outros servers
                 replication(key, value, timestamp, 10098);
                 replication(key, value, timestamp, 10097);
                 replication(key, value, timestamp, 10099);
                 return;
-            }
-            //TODO call lider to do put
+            } else {
+                //se nao envia requisicao para o líder
+                try {
+                    Socket nsocket = new Socket("127.0.0.1", portLider);
 
-            //se nao envia requisicao para o líder
-            try {
-                Socket nsocket = new Socket("127.0.0.1", portLider);
-
-                OutputStream outputStream = nsocket.getOutputStream();
-                writer = new DataOutputStream(outputStream);
-                writer.writeBytes(text + "\n");
-            } catch (Exception e) {
-                throw new RuntimeException(e);
+                    OutputStream outputStream = nsocket.getOutputStream();
+                    writer = new DataOutputStream(outputStream);
+                    writer.writeBytes(text + "\n");
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
             }
         }).start();
     }
 
-    public void getRecived(String key, String text) throws IOException {
+    public void getRecived(String key, Timestamp timestampClient) throws IOException {
         //se é o líder trata requisicao
-        if (this.lider) {
-            if (dataTable.containsKey(key)) {
-                Mensagem msg = new Mensagem();
+        Mensagem msg = new Mensagem();
 
-                msg.setType("GET_OK");
-                msg.setKey(key);
-                msg.setValue(dataTable.get(key));
-                msg.setTimestamp(String.valueOf(timestamps.get(key)));
+        //se possui timestamp atualizado ou se timestamp do cliente é null envia get
+        if (dataTable.containsKey(key) && (timestamps.get(key).after(timestampClient) || timestampClient == null)) {
+            msg.setType("GET_OK");
+            msg.setKey(key);
+            msg.setValue(dataTable.get(key));
+            msg.setTimestamp(String.valueOf(timestamps.get(key)));
 
-                // --- transformando em JSON --- //
-                Gson gson = new Gson(); // conversor
-                String json = gson.toJson(msg);
+            // --- transformando em JSON --- //
+            Gson gson = new Gson(); // conversor
+            String json = gson.toJson(msg);
 
-                // exibindo o JSON //
-                System.out.println(json);
+            // exibindo o JSON //
+            System.out.println(json);
 
-                writer.writeBytes(json + "\n");
-            }
+            writer.writeBytes(json + "\n");
+            return;
+        } else if (timestamps.get(key).before(timestampClient)) {
+            //se o timestamp for atrasado envia TRY_ANOTHER_SERVER_OR_LATER
+            msg.setType("TRY_ANOTHER_SERVER_OR_LATER");
+
+            // --- transformando em JSON --- //
+            Gson gson = new Gson(); // conversor
+            String json = gson.toJson(msg);
+
+            // exibindo o JSON //
+            System.out.println(json);
+
+            writer.writeBytes(json + "\n");
             return;
         }
+        //caso contrário nao encontrou a chave e envia nulo para cliente
+        msg.setType("NULL");
 
-        //se nao envia requisicao para o líder
-        try {
-            Socket nsocket = new Socket("127.0.0.1", portLider);
+        Gson gson = new Gson(); // conversor
+        String json = gson.toJson(msg);
 
-            OutputStream outputStream = nsocket.getOutputStream();
-            writer = new DataOutputStream(outputStream);
-            writer.writeBytes(text + "\n");
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        writer.writeBytes(msg + "\n");
+        return;
     }
 
     public void replication(String key, String value, Timestamp timestamp, int port) {
-        if (this.port == port) return;
+        if (this.port == port) return; //nao envia para sua porta, retorna
 
-        try {
+        try {//envia solicitacao de replicacao
             Socket nsocket = new Socket("127.0.0.1", port);
-            System.out.println("lider conn criado");
 
             OutputStream outputStream = nsocket.getOutputStream();
             writer = new DataOutputStream(outputStream);
@@ -247,5 +251,9 @@ public class Servidor {
     public void initDataTable() {
         dataTable = new HashMap<>();
         timestamps = new HashMap<>();
+
+        //future para teste do get com tempo atrasado
+        dataTable.put("future", "hard_coded");
+        timestamps.put("future", Timestamp.valueOf("2022-11-22 20:57:45.985"));
     }
 }

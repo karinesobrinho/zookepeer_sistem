@@ -1,0 +1,42 @@
+
+`	java:S1127"FDefine and throw a dedicated exception instead of using a generic one.(Ò‚Òéüÿÿÿÿ
+a	java:S112’"FDefine and throw a dedicated exception instead of using a generic one.(Ò‚Òéüÿÿÿÿ
+a	java:S112¥"FDefine and throw a dedicated exception instead of using a generic one.(Ò‚Òéüÿÿÿÿ
+a	java:S112µ"FDefine and throw a dedicated exception instead of using a generic one.(Ò‚Òéüÿÿÿÿ
+g
+java:S1301‰"KReplace this "switch" statement by "if" statements to increase readability.(õÙÆ‚úÿÿÿÿ
+f
+java:S2095."DUse try-with-resources or close this "Socket" in a "finally" clause.(ùêû¦şÿÿÿÿ8ûéÊ0
+Œ
+java:S1130"qRemove the declaration of thrown exception 'java.io.IOException', as it cannot be thrown from constructor's body.(â¸Óıÿÿÿÿ
+M
+java:S1172)"+Remove this unused method parameter "host".(ÁÑ³¼şÿÿÿÿ8ûéÊ0
+V	java:S125*"<This block of commented-out lines of code should be removed.(ğ˜üúÿÿÿÿ
+N	java:S106J"9Replace this use of System.out or System.err by a logger.(øŒ¼Æ
+S	java:S106O"9Replace this use of System.out or System.err by a logger.(­Æİùûÿÿÿÿ
+N	java:S106g"9Replace this use of System.out or System.err by a logger.(øŒ¼Æ
+S	java:S106l"9Replace this use of System.out or System.err by a logger.(î««¥øÿÿÿÿ
+t
+java:S3776p"RRefactor this method to reduce its Cognitive Complexity from 34 to the 15 allowed.(¡şÏÖøÿÿÿÿ8±ûéÊ0
+L
+java:S1197p"*Move the array designators [] to the type.(¡şÏÖøÿÿÿÿ8²ûéÊ0
+M	java:S106y"9Replace this use of System.out or System.err by a logger.(ãÓ™r
+Z	java:S106z"9Replace this use of System.out or System.err by a logger.(ª¤¤µÿÿÿÿÿ8¸ûéÊ0
+Z	java:S106{"9Replace this use of System.out or System.err by a logger.(„¬†…ÿÿÿÿÿ8¹ûéÊ0
+U	java:S106|"9Replace this use of System.out or System.err by a logger.(¶‹âÒ8¹ûéÊ0
+[	java:S106ƒ"9Replace this use of System.out or System.err by a logger.(úÇä‰şÿÿÿÿ8ºûéÊ0
+U	java:S106„"9Replace this use of System.out or System.err by a logger.(Öó‚8»ûéÊ0
+[	java:S106…"9Replace this use of System.out or System.err by a logger.(ç©ñ¸øÿÿÿÿ8»ûéÊ0
+D	java:S131‰""Add a default case to this switch.(õÙÆ‚úÿÿÿÿ8½ûéÊ0
+V	java:S106œ"9Replace this use of System.out or System.err by a logger.(ĞÓ£8¿ûéÊ0
+V	java:S106Ÿ"9Replace this use of System.out or System.err by a logger.(Ş™ˆä8¿ûéÊ0
+[	java:S106¨"9Replace this use of System.out or System.err by a logger.(ƒ¤ô¥ùÿÿÿÿ8ÁûéÊ0
+V	java:S106¯"9Replace this use of System.out or System.err by a logger.(ÊÙ°Ì8ÂûéÊ0
+[	java:S106¸"9Replace this use of System.out or System.err by a logger.(ƒ¤ô¥ùÿÿÿÿ8ÄûéÊ0
+V	java:S106¿"9Replace this use of System.out or System.err by a logger.(¨úĞ¹8ÆûéÊ0
+[	java:S106Ì"9Replace this use of System.out or System.err by a logger.(ğ©ø“øÿÿÿÿ8ÊûéÊ0
+V	java:S106Ï"9Replace this use of System.out or System.err by a logger.(¡³øü8ËûéÊ0
+V	java:S106×"9Replace this use of System.out or System.err by a logger.(òğ€ä8ÙûéÊ0
+V	java:S106Ú"9Replace this use of System.out or System.err by a logger.(‰ıš­8ÚûéÊ0
+[	java:S106İ"9Replace this use of System.out or System.err by a logger.(í×Ù¬ıÿÿÿÿ8ÛûéÊ0
+[	java:S106à"9Replace this use of System.out or System.err by a logger.(„ğœƒøÿÿÿÿ8ŞûéÊ0

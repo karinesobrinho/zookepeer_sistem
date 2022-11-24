@@ -1,0 +1,28 @@
+
+`	java:S112E"FDefine and throw a dedicated exception instead of using a generic one.(Ò‚Òéüÿÿÿÿ
+`	java:S112J"FDefine and throw a dedicated exception instead of using a generic one.(Ò‚Òéüÿÿÿÿ
+a	java:S112’"FDefine and throw a dedicated exception instead of using a generic one.(Ò‚Òéüÿÿÿÿ
+a	java:S112š"FDefine and throw a dedicated exception instead of using a generic one.(Ò‚Òéüÿÿÿÿ
+a	java:S112¬"FDefine and throw a dedicated exception instead of using a generic one.(Ò‚Òéüÿÿÿÿ
+h	java:S112÷"FDefine and throw a dedicated exception instead of using a generic one.(Ò‚Òéüÿÿÿÿ8À©ÕÊ0
+b
+java:S2095â"DUse try-with-resources or close this "Socket" in a "finally" clause.(ûŞÖ8Ó©ÕÊ0
+N	java:S1061"9Replace this use of System.out or System.err by a logger.(ù¯íğ
+S	java:S1063"9Replace this use of System.out or System.err by a logger.(ÚÛ‚ïşÿÿÿÿ
+S	java:S106="9Replace this use of System.out or System.err by a logger.(Ä™é¡úÿÿÿÿ
+U	java:S106k"9Replace this use of System.out or System.err by a logger.(øŒ¼Æ8ğ©‡Ê0
+t
+java:S3776p"RRefactor this method to reduce its Cognitive Complexity from 18 to the 15 allowed.(‹µçúÿÿÿÿ8ğ©‡Ê0
+
+java:S1130p"lRemove the declaration of thrown exception 'java.io.IOException', as it cannot be thrown from method's body.(‹µçúÿÿÿÿ8ñ©‡Ê0
+U	java:S106r"9Replace this use of System.out or System.err by a logger.(­íÏÀ8ò©‡Ê0
+V	java:S106"9Replace this use of System.out or System.err by a logger.(øŒ¼Æ8ö©‡Ê0
+[
+java:S1854Ø"8Remove this useless assignment to local variable "json".(ĞÃ…­ùÿÿÿÿ8ù©‡Ê0
+9
+java:S3626Û"Remove this redundant jump.(ûÁİ…8ú©‡Ê0
+V	java:S106Â"9Replace this use of System.out or System.err by a logger.(øŒ¼Æ8ü©‡Ê0
+V	java:S106Ï"9Replace this use of System.out or System.err by a logger.(øŒ¼Æ8ş©‡Ê0
+L
+java:S1481Ø")Remove this unused "json" local variable.(ĞÃ…­ùÿÿÿÿ8€ª‡Ê0
+V	java:S106ó"9Replace this use of System.out or System.err by a logger.(øŒ¼Æ8†ª‡Ê0

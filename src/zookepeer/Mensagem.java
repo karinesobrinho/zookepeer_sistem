@@ -1,6 +1,8 @@
 package zookepeer;
 
 public class Mensagem {
+    //Classe nao possui construtor, só parametros que são acessados por getters e setters,
+    //A transformação para json acontece fora da classe
     String type;
     String key;
     String value;
